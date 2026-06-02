@@ -1,0 +1,52 @@
+[
+  {
+    "file": "LineA_Stable_10K.csv",
+    "line": "lineA",
+    "bucket_key": "raw/production_lines/lineA/year=2025/month=05/LineA_Stable_10K.csv",
+    "year": "2025",
+    "month": "05",
+    "local_md5": "664d60672e369352f5235c9376f4c947",
+    "remote_etag": "664d60672e369352f5235c9376f4c947",
+    "status": "OK"
+  },
+  {
+    "file": "LineB_Flux.csv",
+    "line": "lineB",
+    "bucket_key": "raw/production_lines/lineB/year=2025/month=04/LineB_Flux.csv",
+    "year": "2025",
+    "month": "04",
+    "local_md5": "cb1ef784bb5a99098ec43a763b9a1e67",
+    "remote_etag": "cb1ef784bb5a99098ec43a763b9a1e67",
+    "status": "OK"
+  },
+  {
+    "file": "LineC_Turbulent.csv",
+    "line": "lineC",
+    "bucket_key": "raw/production_lines/lineC/year=2025/month=03/LineC_Turbulent.csv",
+    "year": "2025",
+    "month": "03",
+    "local_md5": "cb408152cc4729b4384d5b1c9667bd97",
+    "remote_etag": "cb408152cc4729b4384d5b1c9667bd97",
+    "status": "OK"
+  },
+  {
+    "file": "LineD_SpikeControl.csv",
+    "line": "lineD",
+    "bucket_key": "raw/production_lines/lineD/year=2025/month=02/LineD_SpikeControl.csv",
+    "year": "2025",
+    "month": "02",
+    "local_md5": "1adc02fec2893d071ecba27d85e1754b",
+    "remote_etag": "1adc02fec2893d071ecba27d85e1754b",
+    "status": "OK"
+  },
+  {
+    "file": "LineE_SmoothRun.csv",
+    "line": "lineE",
+    "bucket_key": "raw/production_lines/lineE/year=2025/month=01/LineE_SmoothRun.csv",
+    "year": "2025",
+    "month": "01",
+    "local_md5": "c29839ffd6ea599dc600b3c353b996ac",
+    "remote_etag": "c29839ffd6ea599dc600b3c353b996ac",
+    "status": "OK"
+  }
+]
