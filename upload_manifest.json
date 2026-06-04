@@ -1,0 +1,42 @@
+[
+  {
+    "fichier": "LineA_Stable_10K.csv",
+    "ligne": "lineA",
+    "bucket_key": "raw/production_lines/lineA/LineA_Stable_10K.csv",
+    "md5_local": "664d60672e369352f5235c9376f4c947",
+    "etag_distant": "664d60672e369352f5235c9376f4c947",
+    "statut": "OK"
+  },
+  {
+    "fichier": "LineB_Flux.csv",
+    "ligne": "lineB",
+    "bucket_key": "raw/production_lines/lineB/LineB_Flux.csv",
+    "md5_local": "cb1ef784bb5a99098ec43a763b9a1e67",
+    "etag_distant": "cb1ef784bb5a99098ec43a763b9a1e67",
+    "statut": "OK"
+  },
+  {
+    "fichier": "LineC_Turbulent.csv",
+    "ligne": "lineC",
+    "bucket_key": "raw/production_lines/lineC/LineC_Turbulent.csv",
+    "md5_local": "cb408152cc4729b4384d5b1c9667bd97",
+    "etag_distant": "cb408152cc4729b4384d5b1c9667bd97",
+    "statut": "OK"
+  },
+  {
+    "fichier": "LineD_SpikeControl.csv",
+    "ligne": "lineD",
+    "bucket_key": "raw/production_lines/lineD/LineD_SpikeControl.csv",
+    "md5_local": "1adc02fec2893d071ecba27d85e1754b",
+    "etag_distant": "1adc02fec2893d071ecba27d85e1754b",
+    "statut": "OK"
+  },
+  {
+    "fichier": "LineE_SmoothRun.csv",
+    "ligne": "lineE",
+    "bucket_key": "raw/production_lines/lineE/LineE_SmoothRun.csv",
+    "md5_local": "c29839ffd6ea599dc600b3c353b996ac",
+    "etag_distant": "c29839ffd6ea599dc600b3c353b996ac",
+    "statut": "OK"
+  }
+]

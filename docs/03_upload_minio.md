@@ -41,34 +41,45 @@ Les quatre buckets correspondent aux couches définies dans l'architecture :
 
 ## Politiques d'accès
 
-Les politiques d'accès sont différenciées par couche :
+Des politiques d'accès sont définies au niveau des buckets dès cette étape :
 
-| Bucket    | Politique    | Justification                                      |
-|-----------|--------------|----------------------------------------------------|
-| `raw`     | Lecture/Écriture | Ingestion des fichiers sources                 |
-| `staging` | Lecture/Écriture | Transformations et dépôt des fichiers nettoyés |
-| `curated` | Lecture seule    | Consommation analytique, pas de modification   |
-| `archive` | Lecture seule    | Conservation en audit, pas de modification     |
+| Bucket    | Politique        |
+|-----------|------------------|
+| `raw`     | Lecture/Écriture |
+| `staging` | Lecture/Écriture |
+| `curated` | Lecture seule    |
+| `archive` | Lecture seule    |
 
-Ces politiques sont appliquées au niveau bucket via l'API S3. Les politiques par compte de service (data-analyst, data-engineer, admin) seront configurées en semaine 2.
+### Limitation actuelle
+
+Ces politiques s'appliquent aux accès anonymes (sans credentials). À ce stade, elles n'ont pas d'effet opérationnel concret : l'utilisateur root `minioadmin` dispose de tous les droits indépendamment de ces règles.
+
+Leur rôle est de poser le cadre d'accès par couche, en cohérence avec l'architecture définie au jour 1 :
+
+* `raw` et `staging` sont des zones de travail — les pipelines doivent pouvoir y écrire
+* `curated` et `archive` sont des zones de consommation — la modification y est interdite
+
+### Évolution prévue
+
+Les politiques par rôle seront configurées au jour 6 via la création de trois comptes de service (`data-analyst`, `data-engineer`, `admin`) avec des policies IAM attachées aux utilisateurs. C'est à ce moment que la différenciation des droits prendra son effet réel.
 
 <br>
 
 ## Ingestion des fichiers
 
-Les cinq CSV sont déposés dans le bucket `raw` avec un partitionnement temporel extrait de leur contenu :
+Les cinq CSV sont déposés dans le bucket `raw` sans transformation ni partitionnement temporel :
 
 ```text
 raw/
 └── production_lines/
-    ├── lineA/year=2025/month=05/LineA_Stable_10K.csv
-    ├── lineB/year=2025/month=04/LineB_Flux.csv
-    ├── lineC/year=2025/month=04/LineC_Turbulent.csv
-    ├── lineD/year=2025/month=04/LineD_SpikeControl.csv
-    └── lineE/year=2025/month=04/LineE_SmoothRun.csv
+    ├── lineA/LineA_Stable_10K.csv
+    ├── lineB/LineB_Flux.csv
+    ├── lineC/LineC_Turbulent.csv
+    ├── lineD/LineD_SpikeControl.csv
+    └── lineE/LineE_SmoothRun.csv
 ```
 
-Le partitionnement `year=/month=/` est dérivé automatiquement en lisant le premier horodatage de chaque fichier, sans valeur codée en dur.
+Le partitionnement `year=/month=/` sera ajouté par les DAGs Airflow lors de l'automatisation de l'ingestion (jours 3-4).
 
 <br>
 
@@ -81,7 +92,6 @@ Pour les fichiers inférieurs à 5 Go déposés en une seule partie, MinIO stock
 Un fichier `upload_manifest.json` est généré à l'issue du script et conserve pour chaque fichier :
 
 * le chemin dans le bucket
-* le partitionnement appliqué
 * l'empreinte MD5 locale
 * l'ETag distant
 * le statut de vérification
@@ -93,6 +103,6 @@ Un fichier `upload_manifest.json` est généré à l'issue du script et conserve
 Le script `scripts/upload_to_minio.py` regroupe les quatre opérations :
 
 1. création des buckets
-2. application des politiques d'accès
-3. upload avec partitionnement automatique
+2. application des politiques d'accès bucket
+3. upload sans partitionnement
 4. vérification d'intégrité et génération du manifeste
