@@ -1,82 +1,52 @@
-<mxfile host="app.diagrams.net" modified="2025-06-04" version="21.0.0">
-  <diagram name="Architecture Data Lake">
-    <mxGraphModel dx="1200" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="900" pageHeight="1200" math="0" shadow="0" background="#1a1a2e">
+<mxfile host="app.diagrams.net">
+  <diagram name="Architecture Data Lake" id="0">
+    <mxGraphModel dx="1290" dy="785" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="900" pageHeight="1200" background="#1a1a2e" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- Source CSV -->
-        <mxCell id="10" value="Source de données (.csv)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="40" width="200" height="50" as="geometry" />
+        <mxCell id="10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" value="Source de données (.csv)" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="40" as="geometry" />
         </mxCell>
-
-        <!-- DAG #1 -->
-        <mxCell id="20" value="&lt;b&gt;&lt;font color='#00bcd4'&gt;DAG #1&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Ingestion des données" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#00bcd4;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="140" width="200" height="50" as="geometry" />
+        <mxCell id="20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#00bcd4;fontColor=#ffffff;fontSize=13;" value="&lt;b&gt;&lt;font color=&#39;#00bcd4&#39;&gt;DAG #1&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Ingestion des données" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="140" as="geometry" />
         </mxCell>
-
-        <!-- MinIO RAW -->
-        <mxCell id="30" value="MinIO RAW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="240" width="200" height="50" as="geometry" />
+        <mxCell id="30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" value="MinIO RAW" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="240" as="geometry" />
         </mxCell>
-
-        <!-- DAG #2 -->
-        <mxCell id="40" value="&lt;b&gt;&lt;font color='#00bcd4'&gt;DAG #2&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Harmonisation des données" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#00bcd4;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="340" width="200" height="50" as="geometry" />
+        <mxCell id="40" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#00bcd4;fontColor=#ffffff;fontSize=13;" value="&lt;b&gt;&lt;font color=&#39;#00bcd4&#39;&gt;DAG #2&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Harmonisation des données" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="340" as="geometry" />
         </mxCell>
-
-        <!-- MinIO STAGING -->
-        <mxCell id="50" value="MinIO STAGING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="440" width="200" height="50" as="geometry" />
+        <mxCell id="50" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" value="MinIO STAGING" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="440" as="geometry" />
         </mxCell>
-
-        <!-- DAG #3 -->
-        <mxCell id="60" value="&lt;b&gt;&lt;font color='#00bcd4'&gt;DAG #3&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Validation &amp; chargement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#00bcd4;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="540" width="200" height="50" as="geometry" />
+        <mxCell id="60" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#00bcd4;fontColor=#ffffff;fontSize=13;" value="&lt;b&gt;&lt;font color=&#39;#00bcd4&#39;&gt;DAG #3&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Validation &amp; chargement" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="540" as="geometry" />
         </mxCell>
-
-        <!-- MinIO CURATED -->
-        <mxCell id="70" value="MinIO CURATED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="300" y="640" width="200" height="50" as="geometry" />
+        <mxCell id="70" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" value="MinIO CURATED" vertex="1">
+          <mxGeometry height="50" width="200" x="300" y="640" as="geometry" />
         </mxCell>
-
-        <!-- MinIO ARCHIVE -->
-        <mxCell id="80" value="MinIO ARCHIVE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="620" y="440" width="200" height="50" as="geometry" />
+        <mxCell id="80" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" value="MinIO ARCHIVE" vertex="1">
+          <mxGeometry height="50" width="200" x="620" y="440" as="geometry" />
         </mxCell>
-
-        <!-- OpenMetadata -->
-        <mxCell id="90" value="OpenMetadata" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="160" y="760" width="160" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- Utilisateurs -->
-        <mxCell id="100" value="Utilisateurs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#c0c0c0;fontColor=#ffffff;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="480" y="760" width="160" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- Flèches principales -->
-        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="10" target="20" parent="1">
+        <mxCell id="e1" edge="1" parent="1" source="10" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" target="20">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="20" target="30" parent="1">
+        <mxCell id="e2" edge="1" parent="1" source="20" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" target="30">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="30" target="40" parent="1">
+        <mxCell id="e3" edge="1" parent="1" source="30" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" target="40">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="40" target="50" parent="1">
+        <mxCell id="e4" edge="1" parent="1" source="40" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" target="50">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="50" target="60" parent="1">
+        <mxCell id="e5" edge="1" parent="1" source="50" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" target="60">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="60" target="70" parent="1">
+        <mxCell id="e6" edge="1" parent="1" source="60" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" target="70">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- ILM RAW → ARCHIVE -->
-        <mxCell id="e7" value="ILM" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#e67e22;fontColor=#e67e22;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="30" target="80" parent="1">
+        <mxCell id="e7" edge="1" parent="1" source="30" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#e67e22;fontColor=#e67e22;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="80" value="ILM">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="580" y="265" />
@@ -84,36 +54,21 @@
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- ILM STAGING → ARCHIVE -->
-        <mxCell id="e8" value="ILM" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#e67e22;fontColor=#e67e22;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="50" target="80" parent="1">
+        <mxCell id="e8" edge="1" parent="1" source="50" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#e67e22;fontColor=#e67e22;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="80" value="ILM">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="560" y="465" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- ILM CURATED → ARCHIVE -->
-        <mxCell id="e9" value="ILM" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#e67e22;fontColor=#e67e22;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="70" target="80" parent="1">
+        <mxCell id="e9" edge="1" parent="1" source="70" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#e67e22;fontColor=#e67e22;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="80" value="ILM">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="580" y="665" />
-              <mxPoint x="580" y="490" />
+              <mxPoint x="580" y="465" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- CURATED → OpenMetadata (catalogue) -->
-        <mxCell id="e10" value="catalogue" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#00bcd4;fontColor=#00bcd4;dashed=1;" edge="1" source="70" target="90" parent="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- CURATED → Utilisateurs -->
-        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#c0c0c0;fontColor=#ffffff;" edge="1" source="70" target="100" parent="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>
