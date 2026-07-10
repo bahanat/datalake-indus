@@ -10,10 +10,13 @@ x-airflow-common: &airflow-common
     MINIO_ENDPOINT: http://minio:9000
     MINIO_ACCESS_KEY: minioadmin
     MINIO_SECRET_KEY: minioadmin
+    PYTHONPATH: /opt/airflow
   volumes:
     - ./dags:/opt/airflow/dags
+    - ./scripts:/opt/airflow/scripts
     - ./logs:/opt/airflow/logs
     - ./data:/opt/airflow/data
+    - ./requirements.txt:/requirements.txt
   depends_on:
     postgres:
       condition: service_healthy
@@ -63,6 +66,7 @@ services:
     command:
       - -c
       - |
+        pip install -r /requirements.txt &&
         airflow db migrate &&
         airflow users create \
           --username admin \

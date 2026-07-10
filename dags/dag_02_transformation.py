@@ -1,132 +1,188 @@
 """
-DAG #2 — Transformation vers staging/
-- Harmonise les noms de colonnes (tout en minuscules)
-- Ajoute elapsed_time=NaN pour les lignes qui ne l'ont pas
-- Normalise le timestamp en datetime
-- Dépose le résultat dans staging/ avec le même partitionnement
+DAG #2 — Transformation vers staging
+
+Objectifs :
+
+- Harmoniser les noms de colonnes
+- Ajouter elapsed_time lorsqu'il est absent
+- Normaliser les timestamps
+- Conserver le même partitionnement que dans raw
+- Déposer le résultat dans staging
 """
 
 from __future__ import annotations
 
 import io
-import os
 from datetime import datetime
 
-import boto3
 import pandas as pd
 from airflow.decorators import dag, task
 
-# ── Config ────────────────────────────────────────────────────────────────────
+from scripts.utils.config import (
+    COLUMN_MAPPING,
+    LINES,
+    RAW_BUCKET,
+    STAGING_BUCKET,
+    TARGET_COLUMNS,
+)
 
-MINIO_ENDPOINT  = os.environ.get("MINIO_ENDPOINT", "http://minio:9000")
-MINIO_ACCESS    = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET    = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
-BUCKET_RAW      = "raw"
-BUCKET_STAGING  = "staging"
-
-# Schéma cible
-TARGET_COLUMNS = ["timestamp", "temperature", "pressure", "elapsed_time", "label"]
-
-LINES = ["lineA", "lineB", "lineC", "lineD", "lineE"]
-
-
-def get_s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url=MINIO_ENDPOINT,
-        aws_access_key_id=MINIO_ACCESS,
-        aws_secret_access_key=MINIO_SECRET,
-    )
+from scripts.utils.minio import (
+    get_s3_client,
+    list_keys,
+    upload_dataframe,
+)
 
 
 def harmonize(df: pd.DataFrame) -> pd.DataFrame:
-    """Applique toutes les transformations de normalisation."""
+    """
+    Harmonise le schéma des différentes lignes de production.
+    """
 
-    # 1. Noms de colonnes en minuscules
-    df.columns = [c.lower() for c in df.columns]
+    # ------------------------------------------------------------------
+    # Harmonisation des noms de colonnes
+    # ------------------------------------------------------------------
 
-    # 2. Timestamp en datetime
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.rename(columns=COLUMN_MAPPING)
 
-    # 3. Ajouter elapsed_time si absent
+    # ------------------------------------------------------------------
+    # elapsed_time est optionnel dans certaines lignes
+    # ------------------------------------------------------------------
+
     if "elapsed_time" not in df.columns:
         df["elapsed_time"] = float("nan")
 
-    # 4. Réordonner selon le schéma cible
+    # ------------------------------------------------------------------
+    # Vérification du schéma
+    # ------------------------------------------------------------------
+
+    missing = [column for column in TARGET_COLUMNS if column not in df.columns]
+
+    if missing:
+        raise ValueError(f"Colonnes manquantes : {missing}")
+
+    # ------------------------------------------------------------------
+    # Normalisation timestamp
+    # ------------------------------------------------------------------
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+    # ------------------------------------------------------------------
+    # Réorganisation des colonnes
+    # ------------------------------------------------------------------
+
     df = df[TARGET_COLUMNS]
 
     return df
 
 
-def list_raw_keys(s3, line: str) -> list[str]:
-    """Liste tous les objets dans raw/production_lines/{line}/"""
-    prefix = f"production_lines/{line}/"
-    paginator = s3.get_paginator("list_objects_v2")
-    keys = []
-    for page in paginator.paginate(Bucket=BUCKET_RAW, Prefix=prefix):
-        for obj in page.get("Contents", []):
-            keys.append(obj["Key"])
-    return keys
-
-
-# ── Tasks ─────────────────────────────────────────────────────────────────────
-
 @task
 def transform_line(line: str) -> dict:
-    """Lit les fichiers raw d'une ligne, les harmonise et les dépose en staging."""
+    """
+    Transforme tous les objets raw appartenant à une ligne de production.
+    """
+
     s3 = get_s3_client()
-    keys = list_raw_keys(s3, line)
+
+    prefix = f"production_lines/{line}/"
+
+    keys = list_keys(
+        s3=s3,
+        bucket=RAW_BUCKET,
+        prefix=prefix,
+    )
 
     if not keys:
-        print(f"[{line}] Aucun fichier trouvé dans raw/")
-        return {"line": line, "fichiers": 0}
+
+        print(f"[{line}] Aucun fichier trouvé.")
+
+        return {
+            "line": line,
+            "files": 0,
+        }
 
     processed = 0
+
     for key in keys:
-        # Lecture depuis raw/
-        obj = s3.get_object(Bucket=BUCKET_RAW, Key=key)
+
+        obj = s3.get_object(
+            Bucket=RAW_BUCKET,
+            Key=key,
+        )
+
         df = pd.read_csv(io.BytesIO(obj["Body"].read()))
 
-        # Transformation
         df = harmonize(df)
 
-        # Dépôt en staging/ avec le même chemin relatif
-        staging_key = key  # même partitionnement, même nom
-        buf = io.BytesIO()
-        df.to_csv(buf, index=False)
-        s3.put_object(Bucket=BUCKET_STAGING, Key=staging_key, Body=buf.getvalue())
+        upload_dataframe(
+            s3=s3,
+            bucket=STAGING_BUCKET,
+            key=key,
+            df=df,
+        )
 
-        print(f"[{line}] {key} → staging/{staging_key} ({len(df)} lignes)")
         processed += 1
 
-    return {"line": line, "fichiers": processed}
+        print(f"[{line}] " f"{key} " f"({len(df)} lignes)")
+
+    return {
+        "line": line,
+        "files": processed,
+    }
 
 
 @task
 def log_summary(results: list[dict]) -> None:
-    """Affiche un résumé de la transformation."""
-    print("\n=== Résumé DAG #2 — Transformation ===")
-    for r in results:
-        print(f"  {r['line']:<8} → {r['fichiers']} fichier(s) déposé(s) en staging/")
-    print(f"\nSchéma cible appliqué : {TARGET_COLUMNS}")
+    """
+    Résumé de la transformation.
+    """
 
+    print("\n===================================")
+    print("Résumé DAG #2")
+    print("===================================\n")
 
-# ── DAG ───────────────────────────────────────────────────────────────────────
+    total = 0
+
+    for result in results:
+
+        total += result["files"]
+
+        print(f"{result['line']:<8}" f"{result['files']} fichier(s)")
+
+    print()
+
+    print(f"Total : {total} fichier(s) transformé(s)")
+
+    print()
+
+    print("Schéma cible :")
+
+    for column in TARGET_COLUMNS:
+        print(f" - {column}")
+
 
 @dag(
     dag_id="dag_02_transformation_staging",
-    description="Harmonisation des schémas et dépôt en staging/",
+    description="Transformation des données raw vers staging",
     start_date=datetime(2025, 1, 1),
     schedule=None,
     catchup=False,
-    tags=["transformation", "staging"],
+    tags=[
+        "staging",
+        "transformation",
+        "minio",
+    ],
 )
 def dag_02_transformation():
-    transform_tasks = [
-        transform_line.override(task_id=f"transform_{line}")(line=line)
-        for line in LINES
-    ]
-    log_summary(transform_tasks)
+
+    tasks = []
+
+    for line in LINES:
+
+        task = transform_line.override(task_id=f"transform_{line}")(line=line)
+
+        tasks.append(task)
+
+    log_summary(tasks)
 
 
 dag_02_transformation()
