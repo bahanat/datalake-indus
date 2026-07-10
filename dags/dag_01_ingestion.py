@@ -1,138 +1,197 @@
 """
 DAG #1 — Ingestion brute
-Dépose chaque CSV dans raw/ avec partitionnement year=/month=/line=/
-LineA est traitée en chunks de 1000 lignes pour simuler un flux réel.
+
+Dépose chaque CSV dans raw/ avec partitionnement :
+
+production_lines/
+    lineX/
+        year=YYYY/
+            month=MM/
+
+La ligne A est traitée par chunks de 1000 lignes afin de simuler un flux
+d'ingestion progressif.
 """
 
 from __future__ import annotations
 
-import hashlib
-import io
-import os
 from datetime import datetime
-from pathlib import Path
 
-import boto3
 import pandas as pd
 from airflow.decorators import dag, task
 
-# ── Config ────────────────────────────────────────────────────────────────────
+from scripts.utils.config import (
+    AIRFLOW_DATA,
+    CHUNK_SIZE,
+    LINE_MAP,
+    RAW_BUCKET,
+)
 
-MINIO_ENDPOINT  = os.environ.get("MINIO_ENDPOINT", "http://minio:9000")
-MINIO_ACCESS    = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET    = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
-BUCKET_RAW      = "raw"
-DATA_DIR        = Path("/opt/airflow/data/raw")
-CHUNK_SIZE      = 1000  # lignes par batch pour LineA
+from scripts.utils.minio import (
+    build_key,
+    dataframe_to_bytes,
+    get_partition,
+    get_s3_client,
+    md5_bytes,
+)
 
-LINE_MAP = {
-    "lineA": "LineA_Stable_10K.csv",
-    "lineB": "LineB_Flux.csv",
-    "lineC": "LineC_Turbulent.csv",
-    "lineD": "LineD_SpikeControl.csv",
-    "lineE": "LineE_SmoothRun.csv",
-}
-
-
-def get_s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url=MINIO_ENDPOINT,
-        aws_access_key_id=MINIO_ACCESS,
-        aws_secret_access_key=MINIO_SECRET,
-    )
-
-
-def md5_bytes(data: bytes) -> str:
-    return hashlib.md5(data).hexdigest()
-
-
-def get_partition(df: pd.DataFrame) -> tuple[str, str]:
-    """Extrait year et month depuis la première ligne du dataframe."""
-    ts_col = next(c for c in df.columns if c.lower() == "timestamp")
-    ts = pd.to_datetime(df[ts_col].iloc[0])
-    return str(ts.year), f"{ts.month:02d}"
-
-
-def build_key(line: str, year: str, month: str, filename: str) -> str:
-    return f"production_lines/{line}/year={year}/month={month}/{filename}"
-
-
-# ── Tasks ─────────────────────────────────────────────────────────────────────
 
 @task
 def ingest_line(line: str, filename: str) -> dict:
-    """Ingère un CSV vers raw/ avec partitionnement temporel."""
+    """
+    Ingère un CSV dans le bucket raw.
+    """
+
     s3 = get_s3_client()
-    local_path = DATA_DIR / filename
+
+    local_path = AIRFLOW_DATA / filename
+
+    if not local_path.exists():
+        raise FileNotFoundError(local_path)
 
     df = pd.read_csv(local_path)
+
     year, month = get_partition(df)
 
+    # ------------------------------------------------------------------
+    # Line A : simulation d'un flux via des chunks
+    # ------------------------------------------------------------------
+
     if line == "lineA":
-        # Traitement par chunks pour simuler un flux réel
-        results = []
+
+        uploaded_chunks = []
+
         for i, start in enumerate(range(0, len(df), CHUNK_SIZE)):
-            chunk = df.iloc[start:start + CHUNK_SIZE]
-            chunk_filename = filename.replace(".csv", f"_chunk_{i:03d}.csv")
-            key = build_key(line, year, month, chunk_filename)
 
-            buf = io.BytesIO()
-            chunk.to_csv(buf, index=False)
-            data = buf.getvalue()
+            chunk = df.iloc[start : start + CHUNK_SIZE]
 
-            s3.put_object(Bucket=BUCKET_RAW, Key=key, Body=data)
-            results.append({
-                "key": key,
-                "lignes": len(chunk),
-                "md5": md5_bytes(data),
-            })
+            chunk_filename = filename.replace(
+                ".csv",
+                f"_chunk_{i:03d}.csv",
+            )
 
-        print(f"[{line}] {len(results)} chunks uploadés ({len(df)} lignes total)")
-        return {"line": line, "mode": "chunks", "chunks": results}
+            key = build_key(
+                line=line,
+                year=year,
+                month=month,
+                filename=chunk_filename,
+            )
 
-    else:
-        # Upload direct pour les autres lignes
-        key = build_key(line, year, month, filename)
-        buf = io.BytesIO()
-        df.to_csv(buf, index=False)
-        data = buf.getvalue()
+            data = dataframe_to_bytes(chunk)
 
-        s3.put_object(Bucket=BUCKET_RAW, Key=key, Body=data)
-        checksum = md5_bytes(data)
+            s3.put_object(
+                Bucket=RAW_BUCKET,
+                Key=key,
+                Body=data,
+            )
 
-        print(f"[{line}] Uploadé → raw/{key} (MD5: {checksum})")
-        return {"line": line, "mode": "direct", "key": key, "md5": checksum}
+            uploaded_chunks.append(
+                {
+                    "key": key,
+                    "rows": len(chunk),
+                    "md5": md5_bytes(data),
+                }
+            )
+
+            print(f"[{line}] " f"chunk {i:03d} " f"({len(chunk)} lignes)")
+
+        print(
+            f"[{line}] "
+            f"{len(uploaded_chunks)} chunks uploadés "
+            f"({len(df)} lignes)"
+        )
+
+        return {
+            "line": line,
+            "mode": "chunks",
+            "chunks": uploaded_chunks,
+        }
+
+    # ------------------------------------------------------------------
+    # Autres lignes
+    # ------------------------------------------------------------------
+
+    key = build_key(
+        line=line,
+        year=year,
+        month=month,
+        filename=filename,
+    )
+
+    data = dataframe_to_bytes(df)
+
+    s3.put_object(
+        Bucket=RAW_BUCKET,
+        Key=key,
+        Body=data,
+    )
+
+    checksum = md5_bytes(data)
+
+    print(f"[{line}] " f"Upload terminé : " f"{key}")
+
+    print(f"MD5 : {checksum}")
+
+    return {
+        "line": line,
+        "mode": "direct",
+        "key": key,
+        "md5": checksum,
+    }
 
 
 @task
 def log_summary(results: list[dict]) -> None:
-    """Affiche un résumé de l'ingestion."""
-    print("\n=== Résumé DAG #1 — Ingestion ===")
-    for r in results:
-        if r["mode"] == "chunks":
-            total = sum(c["lignes"] for c in r["chunks"])
-            print(f"  {r['line']:<8} → {len(r['chunks'])} chunks ({total} lignes)")
+    """
+    Résumé de l'ingestion.
+    """
+
+    print("\n===================================")
+    print("Résumé DAG #1")
+    print("===================================\n")
+
+    for result in results:
+
+        if result["mode"] == "chunks":
+
+            total_rows = sum(chunk["rows"] for chunk in result["chunks"])
+
+            print(
+                f"{result['line']:<8}"
+                f"{len(result['chunks'])} chunks"
+                f" ({total_rows} lignes)"
+            )
+
         else:
-            print(f"  {r['line']:<8} → {r['key']}")
 
+            print(f"{result['line']:<8}" f"{result['key']}")
 
-# ── DAG ───────────────────────────────────────────────────────────────────────
 
 @dag(
     dag_id="dag_01_ingestion_raw",
-    description="Ingestion des CSV vers raw/ avec partitionnement temporel",
+    description="Ingestion des CSV vers le bucket raw",
     start_date=datetime(2025, 1, 1),
     schedule=None,
     catchup=False,
-    tags=["ingestion", "raw"],
+    tags=[
+        "raw",
+        "ingestion",
+        "minio",
+    ],
 )
 def dag_01_ingestion():
-    ingestion_tasks = [
-        ingest_line.override(task_id=f"ingest_{line}")(line=line, filename=filename)
-        for line, filename in LINE_MAP.items()
-    ]
-    log_summary(ingestion_tasks)
+
+    tasks = []
+
+    for line, filename in LINE_MAP.items():
+
+        task = ingest_line.override(task_id=f"ingest_{line}")(
+            line=line,
+            filename=filename,
+        )
+
+        tasks.append(task)
+
+    log_summary(tasks)
 
 
 dag_01_ingestion()
